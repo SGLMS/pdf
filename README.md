@@ -1,2 +1,2 @@
-# pdf
-Simple laravel wrapper for Mpdf.
+# SglmsPdf
+Simple Laravel wrapper for Mpdf.
