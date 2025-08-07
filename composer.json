@@ -1,0 +1,39 @@
+{
+    "name": "sglms/pdf",
+    "description": "Simple PDF wrapper.",
+    "type": "library",
+    "keywords": [
+        "pdf",
+        "mpdf",
+        "laravel"
+    ],
+    "homepage": "https://sglms.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "James",
+            "email": "james@sglms.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "mpdf/mpdf": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sglms\\Pdf\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sglms\\Pdf\\PdfServiceProvider"
+            ],
+            "aliases": {
+                "Pdf": "Sglms\\Pdf\\Facades\\Pdf"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
