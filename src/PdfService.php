@@ -2,13 +2,15 @@
 
 namespace Sglms\Pdf;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
-use Illuminate\View\View as V;
+use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
 
 class PdfService
 {
+
+    use Macroable;
+
     protected $pdf;
     protected $conf;
 
@@ -36,6 +38,13 @@ class PdfService
         return $this->pdf;
     }
 
+    /**
+     * Add stylesheet
+     *
+     * @param string|null $path
+     *
+     * @return void
+     */
     public function stylesheet(?string $path = null)
     {
         $path = $path ? resource_path() . $path : __DIR__ . '/../css/styles.css';
@@ -46,14 +55,18 @@ class PdfService
         );
     }
 
+    /**
+     * Set Header (view)
+     *
+     * @param string     $header Path to header view.
+     * @param array|null $data   View parameters [Optional]
+     * 
+     * @return void
+     */
     public function header(
-        ?string $header = null,
+        string $header,
         ?array $data = []
     ) {
-        $data = array_merge([
-            'title' => "",
-            'subtitle' => ""
-        ], $data);
         try {
             $view = View::make($header, $data)->render();
         } catch (\Throwable $th) {
