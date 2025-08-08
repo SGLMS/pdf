@@ -131,6 +131,6 @@ It's better suited for single page document generation.
 
 This package is part of a larger project in which we needed to generate a large number of one-page documents and (digitally) sign them.
 
-##License
+## License
 
 SglmsPdf is licensed under the The MIT License.
