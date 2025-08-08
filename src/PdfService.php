@@ -6,20 +6,31 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
 
+/**
+ * PdfService
+ *
+ * @category Library
+ * @package  Sglms/Pdf
+ * @author   James <james@sglms.com>
+ * @license  https://opensource.org/license/MIT MIT
+ * @link     https://sglms.com/
+ */
 class PdfService
 {
-
     use Macroable;
 
     protected $pdf;
     protected $conf;
 
+    /**
+     * Constructor
+     *
+     * @param array|null  $conf  Configuration
+     * @param string|null $title PDF title
+     */
     public function __construct(
         ?array $conf      = [],
         ?string $title    = null,
-        ?string $subtitle = null,
-        ?string $view     = null,
-        ?array $params    = []
     ) {
         $defaultConf = [
             'format'            => 'Letter',
@@ -41,7 +52,7 @@ class PdfService
     /**
      * Add stylesheet
      *
-     * @param string|null $path
+     * @param string|null $path Path to stylesheet
      *
      * @return void
      */
@@ -60,7 +71,7 @@ class PdfService
      *
      * @param string     $header Path to header view.
      * @param array|null $data   View parameters [Optional]
-     * 
+     *
      * @return void
      */
     public function header(
@@ -76,8 +87,16 @@ class PdfService
         return $this;
     }
 
+    /**
+     * Set Footer (view)
+     *
+     * @param string     $footer Path to footer resource.
+     * @param array|null $data   Parameters [Optional]
+     *
+     * @return void
+     */
     public function footer(
-        ?string $footer = null,
+        string $footer,
         ?array $data = []
     ) {
         try {
@@ -89,8 +108,16 @@ class PdfService
         return $this;
     }
 
+    /**
+     * Add View (HTML)
+     *
+     * @param string     $view Path to view resource.
+     * @param array|null $data Parameters
+     *
+     * @return void
+     */
     public function view(
-        ?string $view = null,
+        string $view,
         ?array $data = []
     ) {
         $view = View::make($view, $data)->render();
@@ -98,6 +125,16 @@ class PdfService
         return $this;
     }
 
+    /**
+     * Service Initialization
+     *
+     * @param array|null  $config     Configuration
+     * @param string|null $stylesheet Path to stylesheet
+     * @param string|null $header     Path to header resource (view).
+     * @param string|null $footer     Path to footer resource (view).
+     *
+     * @return void
+     */
     public function init(
         ?array $config = [],
         ?string $stylesheet = null,
@@ -120,7 +157,8 @@ class PdfService
      *
      * It will be available as var:logo
      *
-     * @param string $path
+     * @param string $path Path to logo
+     *
      * @return void
      */
     public function logo(string $path)
@@ -161,6 +199,17 @@ class PdfService
         return $this;
     }
 
+    /**
+     * Load and sign existing PDF.
+     *
+     * @param string       $signature
+     * @param string       $path
+     * @param integer|null $x
+     * @param integer|null $y
+     * @param integer|null $width
+     *
+     * @return void
+     */
     public function signFile(
         string $signature,
         string $path,
@@ -168,26 +217,49 @@ class PdfService
         ?int $y = 200,
         ?int $width = 75
     ) {
-        /* dump($path, $signature); */
-        /* dd($this->pdf); */
         $this->pdf->setSourceFile($path);
         $tplIdx = $this->pdf->importPage(1);
         $this->pdf->useTemplate($tplIdx, 0, 0, 200);
         $this->sign($signature, y: $y, x: $x, width: $width);
     }
 
+    /**
+     * Get base PDF.
+     *
+     * @return Mpdf/Mpdf
+     */
     public function get()
     {
         return $this->pdf;
     }
 
+    /**
+     * Output (stream)
+     *
+     * @param string|null $filename File name
+     *
+     * @return void
+     */
     public function output(?string $filename = 'pdf')
     {
-        return $this->pdf->output($filename . '.pdf', \Mpdf\Output\Destination::INLINE);
+        return $this->pdf->output(
+            $filename . '.pdf',
+            \Mpdf\Output\Destination::INLINE
+        );
     }
 
+    /**
+     * Save PDF to filesystem
+     *
+     * @param string|null $filename File path.
+     *
+     * @return void
+     */
     public function save(?string $filename = 'pdf')
     {
-        return $this->pdf->output($filename . '.pdf', \Mpdf\Output\Destination::FILE);
+        return $this->pdf->output(
+            $filename . '.pdf',
+            \Mpdf\Output\Destination::FILE,
+        );
     }
 }
