@@ -5,7 +5,9 @@
     "keywords": [
         "pdf",
         "mpdf",
-        "laravel"
+        "laravel",
+        "sglms",
+        "signature"
     ],
     "homepage": "https://sglms.com",
     "license": "MIT",
@@ -18,6 +20,9 @@
     "require": {
         "php": ">=8.2",
         "mpdf/mpdf": "^8.2"
+    },
+    "require-dev": {
+        "laravel/framework": "^12.0"
     },
     "autoload": {
         "psr-4": {
