@@ -1,6 +1,6 @@
 {
     "name": "sglms/pdf",
-    "description": "Simple PDF wrapper.",
+    "description": "A simple (but efficient) mPDF wrapper for Laravel (>12).",
     "type": "library",
     "keywords": [
         "pdf",
@@ -18,7 +18,7 @@
         }
     ],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.3",
         "mpdf/mpdf": "^8.2"
     },
     "require-dev": {
