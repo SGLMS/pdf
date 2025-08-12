@@ -2,6 +2,7 @@
 
 namespace Sglms\Pdf;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
@@ -58,7 +59,7 @@ class PdfService
      */
     public function stylesheet(?string $path = null)
     {
-        $path = $path ? resource_path() . $path : __DIR__ . '/../css/styles.css';
+        $path = $path ? resource_path() . "/" . $path : __DIR__ . '/../css/styles.css';
         $stylesheet = file_get_contents($path);
         $this->pdf->WriteHTML(
             $stylesheet,
@@ -240,10 +241,10 @@ class PdfService
      *
      * @return void
      */
-    public function output(?string $filename = 'pdf')
+    public function output(?string $filename = 'abc.pdf')
     {
         return $this->pdf->output(
-            $filename . '.pdf',
+            $filename,
             \Mpdf\Output\Destination::INLINE
         );
     }
@@ -255,11 +256,29 @@ class PdfService
      *
      * @return void
      */
-    public function save(?string $filename = 'pdf')
+    public function save(?string $filename = 'abc.pdf')
     {
         return $this->pdf->output(
-            $filename . '.pdf',
+            $filename,
             \Mpdf\Output\Destination::FILE,
+        );
+    }
+
+    /**
+     * Store to disk using Laravel's Storage Facade
+     *
+     * @param string      $filename File name (ex. abc.pdf).
+     * @param string|null $disk     Disk where to store the file.
+     *
+     * @return void
+     */
+    public function storeAs(
+        ?string $filename = "abc.pdf",
+        ?string $disk = "public"
+    ) {
+        Storage::disk($disk)->put(
+            $filename,
+            $this->pdf->output('', \Mpdf\Output\Destination::STRING_RETURN)
         );
     }
 }
