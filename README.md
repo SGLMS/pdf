@@ -36,6 +36,10 @@ $pdf->output('filename');
 /* Or, ... */
 
 $pdf->save('filename');
+
+/* Or, save it 'the Laravel way' */
+
+$pdf->storeAs('filename', 'disk');
 ```
 
 ### Configuration and Header/Footer
