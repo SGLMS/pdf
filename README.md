@@ -16,7 +16,7 @@ Laravel's auto-discovery features will register the service provider and facade.
 For the impatient:
 
 ```php
-use Sglms\Pdf;
+use Sglms\Facades\Pdf;
 
 $pdf = Pdf::view('pdf.filename')->output('filename.pdf');
 ```
@@ -25,7 +25,7 @@ $pdf = Pdf::view('pdf.filename')->output('filename.pdf');
 
 
 ```php
-use Sglms\Pdf;
+use Sglms\Facades\Pdf;
 
 $pdf = Pdf::view(
 	'pdf.filename',
