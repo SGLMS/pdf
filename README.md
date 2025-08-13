@@ -18,7 +18,7 @@ For the impatient:
 ```php
 use Sglms\Pdf;
 
-$pdf = Pdf::view('pdf.filename')->output('filename');
+$pdf = Pdf::view('pdf.filename')->output('filename.pdf');
 ```
 
 ### View Parameters
@@ -31,11 +31,15 @@ $pdf = Pdf::view(
 	'pdf.filename',
 	['param' => 'value']	/* [Optional */
 );
-$pdf->output('filename');
+$pdf->output('filename.pdf');
 
 /* Or, ... */
 
 $pdf->save('filename');
+
+/* Or, store it 'the Laravel way' */
+
+$pdf->storeAs('filename', 'disk');
 ```
 
 ### Configuration and Header/Footer
@@ -55,16 +59,16 @@ Add your logo (available as 'var:logo' in your views):
 $pdf->logo('path/to/logo.svg');
 ```
 
-Remember to add your logo before header/footer setup, if you plan to use them there.
+Remember to add your logo before header/footer setup, if you plan to use it there.
 
-You can override setup if you need parameters:
+You can override the setup if you need parameters:
 
 ```php
 $pdf->header('pdf.header', ['param' => 'value']);
 $pdf->footer('pdf.footer', ['param' => 'value']);
 ```
 
-Include your header **before** adding views. This is a limitation of mPDF in that it calls `AddPage()` when you include a view (or any other html), and if the header is not set, mpdf will render it blank.
+Include your header **before** adding views to the pdf. This is a limitation of mPDF in that it calls `AddPage()` when you include a view (or any other html), and if the header is not set, mpdf will render the header blank.
 
 
 Concatenate multiple views:
@@ -91,6 +95,11 @@ $pdf->sign(
 	y: 100,		/* [mm] */
 	width: 100	/* [mm] */
 );
+```
+You can also load and sign an existing PDF file:
+
+```php
+$pdf->signFile('pdf.signature, 'path/to/pdf');
 ```
 
 If you need the base mPDF to work on it further:
@@ -133,4 +142,4 @@ This package is part of a larger project in which we needed to generate a large 
 
 ## License
 
-SglmsPdf is licensed under the The MIT License.
+Sglms/Pdf is licensed under the The MIT License.
