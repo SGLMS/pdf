@@ -1,6 +1,6 @@
 {
     "name": "sglms/pdf",
-    "description": "A simple (but efficient) mPDF wrapper for Laravel (>12).",
+    "description": "A simple (but efficient) mPDF wrapper for Laravel (>=12).",
     "type": "library",
     "keywords": [
         "pdf",
