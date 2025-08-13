@@ -214,6 +214,7 @@ class PdfService
     public function signFile(
         string $signature,
         string $path,
+        ?array $data = [],
         ?int $x = 0,
         ?int $y = 200,
         ?int $width = 75
@@ -221,7 +222,7 @@ class PdfService
         $this->pdf->setSourceFile($path);
         $tplIdx = $this->pdf->importPage(1);
         $this->pdf->useTemplate($tplIdx, 0, 0, 200);
-        $this->sign($signature, y: $y, x: $x, width: $width);
+        $this->sign($signature, data: $data, y: $y, x: $x, width: $width);
     }
 
     /**
