@@ -58,6 +58,7 @@ class PdfService
             'margin_left'       => 25,
             'margin_right'      => 25,
             'margin_bottom'     => 25,
+            'tempDir'           => sys_get_temp_dir(),
         ];
     }
 
