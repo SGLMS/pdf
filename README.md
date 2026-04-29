@@ -78,11 +78,19 @@ $pdf->signFile('pdf.signature', storage_path('app/base.pdf'));
 ### Output options
 
 ```php
-$pdf->output('document.pdf');          // Inline in browser
-$pdf->download('document.pdf');        // Force download
-$pdf->save(storage_path('app/a.pdf')); // Write to file path
-$pdf->storeAs('a.pdf', 'public');      // Laravel Storage disk
-$raw = $pdf->string();                 // Raw PDF string
+// Raw string — pass to Laravel's response() helper
+$raw = $pdf->output('document.pdf');
+$raw = $pdf->string();                   // alias, no filename context
+
+// Write to an absolute file path
+$pdf->save(storage_path('app/a.pdf'));
+
+// Laravel Storage disk
+$pdf->storeAs('a.pdf', 'public');
+
+// Stream directly to the browser (bypasses Laravel response)
+$pdf->inline('document.pdf');            // Content-Disposition: inline
+$pdf->download('document.pdf');          // Content-Disposition: attachment
 ```
 
 ### Access underlying mPDF instance
@@ -101,9 +109,13 @@ class CustomController extends Controller
 {
 	public function render()
 	{
-		Pdf::view('pdf.filename')
+		$bytes = Pdf::view('pdf.filename')
 			->sign('pdf.signature')
 			->output('document.pdf');
+
+		return response($bytes, 200)
+			->header('Content-Type', 'application/pdf')
+			->header('Content-Disposition', 'inline; filename="document.pdf"');
 	}
 }
 ```

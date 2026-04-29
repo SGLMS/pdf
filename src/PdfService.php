@@ -290,18 +290,15 @@ class PdfService
     }
 
     /**
-     * Output (stream)
+     * Return the PDF as a raw string suitable for passing to Laravel's response().
      *
-     * @param string|null $filename File name
+     * @param string|null $filename Suggested filename (informational only)
      *
-     * @return void
+     * @return string
      */
     public function output(?string $filename = 'document.pdf'): string
     {
-        return $this->pdf->output(
-            $filename,
-            Destination::INLINE
-        );
+        return $this->pdf->output($filename ?? 'document.pdf', Destination::STRING_RETURN);
     }
 
     /**
@@ -313,11 +310,19 @@ class PdfService
     }
 
     /**
-     * Output PDF as download.
+     * Stream PDF inline directly to the browser (bypasses Laravel response).
      */
-    public function download(?string $filename = 'document.pdf'): string
+    public function inline(?string $filename = 'document.pdf'): void
     {
-        return $this->pdf->output($filename, Destination::DOWNLOAD);
+        $this->pdf->output($filename ?? 'document.pdf', Destination::INLINE);
+    }
+
+    /**
+     * Trigger a browser download directly (bypasses Laravel response).
+     */
+    public function download(?string $filename = 'document.pdf'): void
+    {
+        $this->pdf->output($filename ?? 'document.pdf', Destination::DOWNLOAD);
     }
 
     /**
