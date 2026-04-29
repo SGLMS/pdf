@@ -3,6 +3,7 @@
 namespace Sglms\Pdf\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Sglms\Pdf\PdfService;
 
 class Pdf extends Facade
 {
@@ -14,6 +15,6 @@ class Pdf extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'pdf-service';
+        return PdfService::class;
     }
 }

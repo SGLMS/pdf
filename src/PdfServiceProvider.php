@@ -3,7 +3,6 @@
 namespace Sglms\Pdf;
 
 use Illuminate\Support\ServiceProvider;
-use Sglms\Pdf\PdfService;
 
 /**
  * PdfServiceProvider
@@ -23,12 +22,8 @@ class PdfServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(
-            'pdf-service',
-            function ($app) {
-                return new PdfService();
-            }
-        );
+        $this->app->singleton(PdfService::class, static fn (): PdfService => new PdfService());
+        $this->app->alias(PdfService::class, 'pdf');
     }
 
     /**
