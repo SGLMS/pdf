@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * PdfService
@@ -290,15 +291,45 @@ class PdfService
     }
 
     /**
-     * Return the PDF as a raw string suitable for passing to Laravel's response().
+     * Backward-compatible output helper.
      *
-     * @param string|null $filename Suggested filename (informational only)
+     * Behavior:
+     * - output(): returns raw PDF string.
+     * - output('file.pdf'): returns an inline Laravel HTTP response.
+     * - output('file.pdf', 'I|D|F|S'): supports mPDF-style destinations.
      *
-     * @return string
+     * @param string|null $filename
+     * @param string|null $destination mPDF destination alias (I,D,F,S)
      */
-    public function output(?string $filename = 'document.pdf'): string
+    public function output(?string $filename = 'document.pdf', ?string $destination = null): Response|string
     {
-        return $this->pdf->output($filename ?? 'document.pdf', Destination::STRING_RETURN);
+        $filename = $filename ?? 'document.pdf';
+
+        // Keep modern zero-argument behavior for explicit response(...) wrappers.
+        if ($destination === null && $filename === 'document.pdf') {
+            return $this->string();
+        }
+
+        $dest = strtoupper((string) ($destination ?? 'I'));
+
+        if (in_array($dest, ['S', 'STRING_RETURN'], true)) {
+            return $this->pdf->output($filename, Destination::STRING_RETURN);
+        }
+
+        if (in_array($dest, ['F', 'FILE'], true)) {
+            return $this->pdf->output($filename, Destination::FILE);
+        }
+
+        $disposition = in_array($dest, ['D', 'DOWNLOAD'], true) ? 'attachment' : 'inline';
+
+        return response(
+            $this->pdf->output($filename, Destination::STRING_RETURN),
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => sprintf('%s; filename="%s"', $disposition, $filename),
+            ]
+        );
     }
 
     /**
