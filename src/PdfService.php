@@ -323,7 +323,7 @@ class PdfService
 
         $disposition = in_array($dest, ['D', 'DOWNLOAD'], true) ? 'attachment' : 'inline';
 
-        return response(
+        return new Response(
             $this->pdf->output($filename, Destination::STRING_RETURN),
             200,
             [
