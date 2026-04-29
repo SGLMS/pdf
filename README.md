@@ -1,145 +1,118 @@
-# SglmsPdf (Laravel Mpdf Wrapper)
+# SGLMS PDF
 
-Simple Laravel (^12.0) wrapper for Mpdf, using Laravel's view components.
+Simple Laravel wrapper around mPDF with a fluent API for rendering Blade views, attaching headers/footers, and signing documents.
+
+## Requirements
+
+- PHP >= 8.3
+- Laravel 12
+- mPDF 8.2+
 
 ## Installation
 
-```php
+```bash
 composer require sglms/pdf
 ```
 
-Laravel's auto-discovery features will register the service provider and facade.
+Laravel package discovery registers the service provider and facade automatically.
 
+## Quick Start
+
+```php
+use Sglms\Pdf\Facades\Pdf;
+
+Pdf::view('pdf.invoice', ['order' => $order])->output('invoice.pdf');
+```
 
 ## Usage
 
-For the impatient:
+### Initialize with configuration
 
 ```php
-use Sglms\Pdf;
+use Sglms\Pdf\Facades\Pdf;
 
-$pdf = Pdf::view('pdf.filename')->output('filename.pdf');
-```
-
-### View Parameters
-
-
-```php
-use Sglms\Pdf;
-
-$pdf = Pdf::view(
-	'pdf.filename',
-	['param' => 'value']	/* [Optional */
-);
-$pdf->output('filename.pdf');
-
-/* Or, ... */
-
-$pdf->save('filename');
-
-/* Or, store it 'the Laravel way' */
-
-$pdf->storeAs('filename', 'disk');
-```
-
-### Configuration and Header/Footer
-
-
-```php
 $pdf = Pdf::init(
-	config: ['format' => 'letter'],
+	config: ['format' => 'Letter'],
+	stylesheet: 'css/pdf.css',
 	header: 'pdf.header',
 	footer: 'pdf.footer'
-	stylesheet: 'path/to/stylesheet.css'
 );
 ```
-Add your logo (available as 'var:logo' in your views):
+
+### Render one or multiple views
 
 ```php
-$pdf->logo('path/to/logo.svg');
+$pdf->view('pdf.page-one', ['name' => 'Jane'])
+	->view('pdf.page-two')
+	->output('document.pdf');
 ```
 
-Remember to add your logo before header/footer setup, if you plan to use it there.
+### Add logo for header/footer views
 
-You can override the setup if you need parameters:
+The logo is available in mPDF templates as `var:logo`.
 
 ```php
-$pdf->header('pdf.header', ['param' => 'value']);
-$pdf->footer('pdf.footer', ['param' => 'value']);
+$pdf->logo('images/logo.svg');
 ```
 
-Include your header **before** adding views to the pdf. This is a limitation of mPDF in that it calls `AddPage()` when you include a view (or any other html), and if the header is not set, mpdf will render the header blank.
+If your header or footer uses the logo, call `logo()` before `header()` / `footer()`.
 
-
-Concatenate multiple views:
-
-```php
-$pdf = Pdf::init();
-$pdf->view('pdf.one')->view('pdf.two')->output('filename.pdf');
-```
-
-Sign your document:
-
-```php
-$pdf->sign('pdf.signature', ['name' => 'John Doe']);
-```
-
-Or, ...
-
+### Add signature block
 
 ```php
 $pdf->sign(
 	signature: 'pdf.signature',
 	data: ['name' => 'John Doe'],
-	x: 50,		/* [mm] */
-	y: 100,		/* [mm] */
-	width: 100	/* [mm] */
+	x: 50,
+	y: 100,
+	width: 100
 );
 ```
-You can also load and sign an existing PDF file:
+
+### Sign existing PDF
 
 ```php
-$pdf->signFile('pdf.signature, 'path/to/pdf');
+$pdf->signFile('pdf.signature', storage_path('app/base.pdf'));
 ```
 
-If you need the base mPDF to work on it further:
+### Output options
 
 ```php
-$pdf->get();
+$pdf->output('document.pdf');          // Inline in browser
+$pdf->download('document.pdf');        // Force download
+$pdf->save(storage_path('app/a.pdf')); // Write to file path
+$pdf->storeAs('a.pdf', 'public');      // Laravel Storage disk
+$raw = $pdf->string();                 // Raw PDF string
 ```
 
-
-
-### Use it in your controller
+### Access underlying mPDF instance
 
 ```php
-use Sglms\Pdf;
+$mpdf = $pdf->get();
+```
 
-class CustomController extendes Controller
+## Controller Example
+
+```php
+use App\Http\Controllers\Controller;
+use Sglms\Pdf\Facades\Pdf;
+
+class CustomController extends Controller
 {
-	// ...
-	public function render() {
-        $pdf = Pdf::view('pdf.filename')->sign('pdf.signature');
-        return response($pdf->output(), 200)
-        	->header('Content-Type', 'application/pdf')
-         	->header('Content-Disposition', 'inline; filename="document.pdf"');
-    }
-    //...
+	public function render()
+	{
+		Pdf::view('pdf.filename')
+			->sign('pdf.signature')
+			->output('document.pdf');
+	}
 }
 ```
 
+## Notes
 
-
-## Limitations
-
-As mentioned, very simple (but efficient) wrapper, that works with Laravel 12 (php >=8.3; mpdf >= 8.x).
-
-It's better suited for single page document generation.
-
-### Rationale
-
-This package is part of a larger project in which we needed to generate a large number of one-page documents and (digitally) sign them.
+- mPDF applies headers/footers from the point they are set. Set header/footer before the first rendered body view when possible.
+- This package is intentionally lightweight and optimized for straightforward document-generation workflows.
 
 ## License
 
-Sglms/Pdf is licensed under the The MIT License.
+MIT

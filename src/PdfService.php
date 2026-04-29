@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 
 /**
  * PdfService
@@ -20,8 +21,8 @@ class PdfService
 {
     use Macroable;
 
-    protected $pdf;
-    protected $conf;
+    protected Mpdf $pdf;
+    protected array $conf = [];
 
     /**
      * Constructor
@@ -33,7 +34,22 @@ class PdfService
         ?array $conf      = [],
         ?string $title    = null,
     ) {
-        $defaultConf = [
+        $this->conf = array_merge($this->defaultConfig(), $conf ?? []);
+
+        $config = $this->conf;
+        if ($title !== null) {
+            $config['title'] = $title;
+        }
+
+        $this->pdf = new Mpdf($config);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function defaultConfig(): array
+    {
+        return [
             'format'            => 'Letter',
             'default_font'      => 'sans',
             'default_font_size' => 10,
@@ -42,12 +58,20 @@ class PdfService
             'margin_right'      => 25,
             'margin_bottom'     => 25,
         ];
+    }
 
-        $this->conf = $conf;
+    protected function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, '/') || preg_match('/^[A-Za-z]:\\\\/', $path) === 1;
+    }
 
-        $config    = array_merge($defaultConf, $this->conf);
-        $this->pdf = new Mpdf($config);
-        return $this->pdf;
+    protected function renderView(string $view, array $data = []): string
+    {
+        if (!View::exists($view)) {
+            throw new \InvalidArgumentException("View [{$view}] does not exist.");
+        }
+
+        return View::make($view, $data)->render();
     }
 
     /**
@@ -57,14 +81,27 @@ class PdfService
      *
      * @return void
      */
-    public function stylesheet(?string $path = null)
+    public function stylesheet(?string $path = null): self
     {
-        $path = $path ? resource_path() . "/" . $path : __DIR__ . '/../css/styles.css';
+        $path = $path
+            ? ($this->isAbsolutePath($path) ? $path : resource_path($path))
+            : __DIR__ . '/../css/styles.css';
+
+        if (!is_file($path)) {
+            throw new \InvalidArgumentException("Stylesheet [{$path}] does not exist.");
+        }
+
         $stylesheet = file_get_contents($path);
+        if ($stylesheet === false) {
+            throw new \RuntimeException("Unable to read stylesheet [{$path}].");
+        }
+
         $this->pdf->WriteHTML(
             $stylesheet,
             \Mpdf\HTMLParserMode::HEADER_CSS
         );
+
+        return $this;
     }
 
     /**
@@ -78,13 +115,10 @@ class PdfService
     public function header(
         string $header,
         ?array $data = []
-    ) {
-        try {
-            $view = View::make($header, $data)->render();
-        } catch (\Throwable $th) {
-            $view = __("Invalid View!");
-        }
+    ): self {
+        $view = $this->renderView($header, $data ?? []);
         $this->pdf->setHtmlHeader($view);
+
         return $this;
     }
 
@@ -99,13 +133,10 @@ class PdfService
     public function footer(
         string $footer,
         ?array $data = []
-    ) {
-        try {
-            $view = View::make($footer, $data)->render();
-        } catch (\Throwable $th) {
-            $view = __("Invalid View!");
-        }
+    ): self {
+        $view = $this->renderView($footer, $data ?? []);
         $this->pdf->setHtmlFooter($view);
+
         return $this;
     }
 
@@ -120,9 +151,10 @@ class PdfService
     public function view(
         string $view,
         ?array $data = []
-    ) {
-        $view = View::make($view, $data)->render();
+    ): self {
+        $view = $this->renderView($view, $data ?? []);
         $this->pdf->WriteHTML($view, \Mpdf\HTMLParserMode::HTML_BODY);
+
         return $this;
     }
 
@@ -141,15 +173,20 @@ class PdfService
         ?string $stylesheet = null,
         ?string $header = null,
         ?string $footer = null,
-    ) {
-        $this->pdf  = (new self($config))->get();
+    ): self {
+        $this->conf = array_merge($this->defaultConfig(), $config ?? []);
+        $this->pdf = new Mpdf($this->conf);
+
         $this->stylesheet($stylesheet);
+
         if ($header) {
             $this->header($header);
         }
+
         if ($footer) {
             $this->footer($footer);
         }
+
         return $this;
     }
 
@@ -162,10 +199,20 @@ class PdfService
      *
      * @return void
      */
-    public function logo(string $path)
+    public function logo(string $path): self
     {
-        $imageData = file_get_contents(public_path() . '/' . $path);
+        $path = $this->isAbsolutePath($path) ? $path : public_path($path);
+        if (!is_file($path)) {
+            throw new \InvalidArgumentException("Logo [{$path}] does not exist.");
+        }
+
+        $imageData = file_get_contents($path);
+        if ($imageData === false) {
+            throw new \RuntimeException("Unable to read logo [{$path}].");
+        }
+
         $this->pdf->imageVars['logo'] = $imageData;
+
         return $this;
     }
 
@@ -186,17 +233,18 @@ class PdfService
         int $x             = 0,
         int $y             = 200,
         int $width         = 50
-    ) {
+    ): self {
         $this->pdf->SetXY($x, $y);
         $x = round(3.7795275591 * $x);
         $width = round(3.7795275591 * $width);
-        $signature = View::make($signature, $data)->render();
+        $signature = $this->renderView($signature, $data ?? []);
         $wrapper = <<<EOF
             <div style="margin-left: $x; width: $width; font-family: monospace; font-size: 10px;">
             $signature
             </div>
         EOF;
         $this->pdf->WriteHTML($wrapper, \Mpdf\HTMLParserMode::HTML_BODY);
+
         return $this;
     }
 
@@ -218,11 +266,17 @@ class PdfService
         ?int $x = 0,
         ?int $y = 200,
         ?int $width = 75
-    ) {
+    ): self {
+        if (!is_file($path)) {
+            throw new \InvalidArgumentException("PDF file [{$path}] does not exist.");
+        }
+
         $this->pdf->setSourceFile($path);
         $tplIdx = $this->pdf->importPage(1);
         $this->pdf->useTemplate($tplIdx, 0, 0, 200);
         $this->sign($signature, data: $data, y: $y, x: $x, width: $width);
+
+        return $this;
     }
 
     /**
@@ -230,7 +284,7 @@ class PdfService
      *
      * @return Mpdf/Mpdf
      */
-    public function get()
+    public function get(): Mpdf
     {
         return $this->pdf;
     }
@@ -242,12 +296,28 @@ class PdfService
      *
      * @return void
      */
-    public function output(?string $filename = 'abc.pdf')
+    public function output(?string $filename = 'document.pdf'): string
     {
         return $this->pdf->output(
             $filename,
-            \Mpdf\Output\Destination::INLINE
+            Destination::INLINE
         );
+    }
+
+    /**
+     * Return the generated PDF as a raw string.
+     */
+    public function string(): string
+    {
+        return $this->pdf->output('', Destination::STRING_RETURN);
+    }
+
+    /**
+     * Output PDF as download.
+     */
+    public function download(?string $filename = 'document.pdf'): string
+    {
+        return $this->pdf->output($filename, Destination::DOWNLOAD);
     }
 
     /**
@@ -257,11 +327,11 @@ class PdfService
      *
      * @return void
      */
-    public function save(?string $filename = 'abc.pdf')
+    public function save(?string $filename = 'document.pdf'): string
     {
         return $this->pdf->output(
             $filename,
-            \Mpdf\Output\Destination::FILE,
+            Destination::FILE,
         );
     }
 
@@ -274,12 +344,12 @@ class PdfService
      * @return void
      */
     public function storeAs(
-        ?string $filename = "abc.pdf",
-        ?string $disk = "public"
-    ) {
-        Storage::disk($disk)->put(
+        ?string $filename = 'document.pdf',
+        ?string $disk = 'public'
+    ): bool {
+        return Storage::disk($disk)->put(
             $filename,
-            $this->pdf->output('', \Mpdf\Output\Destination::STRING_RETURN)
+            $this->string()
         );
     }
 }

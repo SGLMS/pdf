@@ -1,6 +1,6 @@
 {
     "name": "sglms/pdf",
-    "description": "A simple (but efficient) mPDF wrapper for Laravel (>=12).",
+    "description": "Simple Laravel wrapper for mPDF with fluent view rendering and signing helpers.",
     "type": "library",
     "keywords": [
         "pdf",
@@ -10,6 +10,10 @@
         "signature"
     ],
     "homepage": "https://sglms.com",
+    "support": {
+        "issues": "https://github.com/sglms/sglms-pdf/issues",
+        "source": "https://github.com/sglms/sglms-pdf"
+    },
     "license": "MIT",
     "authors": [
         {
@@ -19,6 +23,8 @@
     ],
     "require": {
         "php": ">=8.3",
+        "illuminate/support": "^12.0",
+        "illuminate/view": "^12.0",
         "mpdf/mpdf": "^8.2"
     },
     "require-dev": {
@@ -39,6 +45,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
