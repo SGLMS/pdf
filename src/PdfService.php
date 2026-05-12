@@ -389,4 +389,10 @@ class PdfService
             $this->string()
         );
     }
+
+    public function html($html)
+    {
+        $this->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+        return $this; 
+    }
 }
