@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Traits\Macroable;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
+use Mpdf\WatermarkText;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -394,5 +395,16 @@ class PdfService
     {
         $this->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
         return $this; 
+    }
+
+    public function setWatermarkText(
+        string $text,
+        array $options = [],
+        ?string $color = 'gray',
+    ): self
+    {
+        $this->pdf->SetWatermarkText(new WatermarkText($text, color: $color), $options);
+        $this->pdf->showWatermarkText = true;
+        return $this;
     }
 }
