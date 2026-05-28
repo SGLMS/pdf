@@ -116,9 +116,13 @@ class PdfService
      * @return void
      */
     public function header(
-        string $header,
+        ?string $header = null,
         ?array $data = []
     ): self {
+        if($header === null) {
+            $this->pdf->setHtmlHeader('');
+            return $this;
+        }
         $view = $this->renderView($header, $data ?? []);
         $this->pdf->setHtmlHeader($view);
 
